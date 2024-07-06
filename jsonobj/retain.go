@@ -62,16 +62,14 @@ func (r *Retain) ToJSON(obj any) ([]byte, error) {
 		all[k] = v
 	}
 
-	if err := forJSONField(rv, func(t jsonTag, v reflect.Value) error {
+	forJSONField(rv, func(t jsonTag, v reflect.Value) struct{} {
 		if t.omitEmpty() && isZero(v) {
-			return nil
+			return struct{}{}
 		}
 
 		all[t.name()] = v.Interface()
-		return nil
-	}); err != nil {
-		return nil, err
-	}
+		return struct{}{}
+	})
 
 	return json.Marshal(all)
 }
@@ -160,7 +158,8 @@ func ensureStruct(obj any, requirePtr bool) (reflect.Value, bool) {
 	return rv, rv.Kind() == reflect.Struct
 }
 
-func forJSONField(rv reflect.Value, fn func(t jsonTag, v reflect.Value) error) error {
+func forJSONField[R comparable](rv reflect.Value, fn func(t jsonTag, v reflect.Value) R) R {
+	var zeroRet R
 	rt := rv.Type()
 
 	for f := 0; f < rt.NumField(); f++ {
@@ -180,12 +179,12 @@ func forJSONField(rv reflect.Value, fn func(t jsonTag, v reflect.Value) error) e
 			field: ft,
 		}
 
-		if err := fn(jt, rv.Field(f)); err != nil {
-			return err
+		if ret := fn(jt, rv.Field(f)); ret != zeroRet {
+			return ret
 		}
 	}
 
-	return nil
+	return zeroRet
 }
 
 type jsonTag struct {
