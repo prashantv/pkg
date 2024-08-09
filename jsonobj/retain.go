@@ -90,10 +90,10 @@ func MustRetainable(obj interface {
 }
 
 // Retainable checks that the provided type is supported for Retain marshalling
-// by checking for:
-// * The type is a struct pointer (for `UnmarshalJSON` to work correctly).
-// * The type has no duplicate JSON field names.
-// * The type has no unsupported json tags.
+// by checking that:
+//  * The type is a struct pointer (for `UnmarshalJSON` to work correctly).
+//  * The type has no duplicate JSON field names.
+//  * The type has no unsupported json tags.
 func Retainable(obj interface {
 	json.Marshaler
 	json.Unmarshaler
